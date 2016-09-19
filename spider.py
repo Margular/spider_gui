@@ -12,39 +12,39 @@ import random
 import _thread
 import pickle
 
-class App(Frame):
-    def __init__(self,mw):
+class Spider(Frame):
+    def __init__(self,master):
         self.headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36'}
         self.enctype = 'utf-8'
         self.proxies = []
         self.initialdir = os.getcwd()
+        self.var = dict()   #初始默认值字典
 
-        Frame.__init__(self,mw)
-        #初始默认值字典
-        self.var = dict()
+        Frame.__init__(self,master)
+
         #抓取地址----------------------------------------------------------------------------
-        self.frmURL = Frame(mw)     #抓取地址框架
+        self.frmURL = Frame(master)     #抓取地址框架
         
         self.lblURL = Label(self.frmURL,text='抓取地址:')  #抓取地址标签
-        self.lblURL.grid(row=0,column=0,padx=10)
+        self.lblURL.grid(row=0,column=0,padx=10,sticky=N+W)
 
         var = StringVar()
         var.set(r'http://www.example.com?id=')
         self.var['url1'] = var
         self.entURL1 = Entry(self.frmURL,width=80,textvariable=self.var['url1'])   #地址1输入框
-        self.entURL1.grid(row=0,column=1)
+        self.entURL1.grid(row=0,column=1,sticky=N)
 
         var = StringVar()
         var.set('1')
         self.var['url2'] = var
         self.entURL2 = Entry(self.frmURL,width=6,textvariable=self.var['url2'])   #地址2输入框
-        self.entURL2.grid(row=0,column=2)
+        self.entURL2.grid(row=0,column=2,sticky=N)
 
         var = StringVar()
         var.set('&user=admin')
         self.var['url3'] = var
         self.entURL3 = Entry(self.frmURL,textvariable=self.var['url3'])  #地址3输入框
-        self.entURL3.grid(row=0,column=3)
+        self.entURL3.grid(row=0,column=3,sticky=N)
         
         self.lblStep = Label(self.frmURL,text="递增的量:") #递增量标签
         self.lblStep.grid(row=0,column=4,padx=10)
@@ -53,13 +53,13 @@ class App(Frame):
         var.set("1")
         self.var["step"] = var
         self.entStep = Entry(self.frmURL,width=6,textvariable=self.var["step"])  #递增量输入框
-        self.entStep.grid(row=0,column=5)
+        self.entStep.grid(row=0,column=5,sticky=N+E)
         
-        self.frmURL.grid(sticky=W+E,row=0,column=0,pady=5)
+        self.frmURL.grid(sticky=N+W+E,row=0,column=0,pady=5)
         #-------------------------------------------------------------------------------------
         
         #代理地址--------------------------以及times-------------------------------------------
-        self.frmProxy = Frame(mw)   #代理框架
+        self.frmProxy = Frame(master)   #代理框架
 
         self.lblProxy = Label(self.frmProxy,text="代理地址:")   #代理标签
         self.lblProxy.grid(row=0,column=0,padx=10)
@@ -95,7 +95,7 @@ class App(Frame):
         #-------------------------------------------------------------------------------------
 
         #正则表达式区域--------------------------------------------------------------------------
-        self.frmre = Frame(mw)  #正则表达式框架
+        self.frmre = Frame(master)  #正则表达式框架
         
         self.frmreURL = LabelFrame(self.frmre,text="网页正则表达式",padx=10)     #网页正则表达式
         self.barURL = Scrollbar(self.frmreURL)
@@ -132,7 +132,7 @@ class App(Frame):
         #--------------------------------------------------------------------------------------
 
         #文件路径区域-----------------------------------------------------------------------------
-        self.frmPath = Frame(mw)    #文件路径框架
+        self.frmPath = Frame(master)    #文件路径框架
 
         self.lblPath = Label(self.frmPath,text="保存路径:")      #标签
         self.lblPath.pack(side=LEFT,padx=10)
@@ -147,7 +147,7 @@ class App(Frame):
         #---------------------------------------------------------------------------------------
 
         #按钮区域---------------------------------------------------------------------------------
-        self.frmButton = Frame(mw)  #按钮框架
+        self.frmButton = Frame(master)  #按钮框架
 
         self.btnSpide = Button(self.frmButton,text="给 我 爬!!!",command=self.start_spide) #开始爬
         self.btnSpide.grid(row=0,column=0,padx=25,ipadx=60,ipady=5)
@@ -165,13 +165,13 @@ class App(Frame):
         #----------------------------------------------------------------------------------------
 
         #文本框-----------------------------------------------------------------------------------
-        self.frmInfo = Frame(mw)    #信息框架
+        self.frmInfo = Frame(master)    #信息框架
         
         self.barInfo = Scrollbar(self.frmInfo)
-        self.barInfo.pack(side=RIGHT,fill=Y)
+        self.barInfo.grid(row=0,column=1,sticky=N+S)
         
-        self.txtInfo = Text(self.frmInfo,yscrollcommand=self.barInfo.set,width=135)
-        self.txtInfo.pack(side=LEFT)
+        self.txtInfo = Text(self.frmInfo , height=20 , yscrollcommand=self.barInfo.set,width=135)
+        self.txtInfo.grid(row=0,column=0)
 
         self.barInfo.config(command=self.txtInfo.yview)
 
@@ -189,7 +189,7 @@ class App(Frame):
             pickle.dump([dic,self.txtURL.get("1.0",END),self.txtProxy.get("1.0",END)],f)
 
     def load(self):
-        filename = filedialog.askopenfilename(defaultextension=".pkl",initialdir=self.initialdir)
+        filename = filedialog.askopenfilename(defaultextension=".pkl" , filetypes=[("Python打包文件" , ".pkl"),("所有文件",".*")] , initialdir=self.initialdir)
         if not os.path.exists(filename):
             return
         with open(filename,'rb') as f:
@@ -247,6 +247,7 @@ class App(Frame):
         self.insert_info('正在获取代理...\n')
         self.get_proxy() #取得代理
         self.insert_info('获取代理成功...\n')
+        print(self.proxies)
         self.download()  #开始下载
 
     def get_proxy(self):            #从代理页面提取代理IP及端口
@@ -254,24 +255,26 @@ class App(Frame):
         req = urllib.request.Request(proxy_url,None,self.headers)
         response = self.get_result(req)
         html = response.read().decode('utf-8')
+        print(html)
         self.proxies = re.compile(self.txtProxy.get("1.0",END),re.VERBOSE).findall(html)
         #定位协议、IP、端口、地理位置下标
         self.protocol = self.ip = self.port = self.location = 0
-        for index in range(len(self.proxies[0])):
-            if re.match(r'[Hh][Tt][Tt][Pp][Ss]?',self.proxies[0][index]):
-                self.protocol = index
-                continue
-            elif re.match(r'.+\..+\..+\..+',self.proxies[0][index]):
-                self.ip = index
-                continue
-            elif self.proxies[0][index].isdecimal():
-                self.port = index
-                continue
-            else:
-                self.location = index
-                continue
-        if len(self.proxies[0]) < 4:
-            self.location = -1
+        if self.proxies:
+            for index in range(len(self.proxies[0])):
+                if re.match(r'[Hh][Tt][Tt][Pp][Ss]?',self.proxies[0][index]):
+                    self.protocol = index
+                    continue
+                elif re.match(r'.+\..+\..+\..+',self.proxies[0][index]):
+                    self.ip = index
+                    continue
+                elif self.proxies[0][index].isdecimal():
+                    self.port = index
+                    continue
+                else:
+                    self.location = index
+                    continue
+            if len(self.proxies[0]) < 4:
+                self.location = -1
             
     def get_result(self,req_or_url,is_retrieve=False,filename = None):         #取得网页页面
         max_error_times = int(self.var["times"].get())
@@ -368,11 +371,15 @@ class App(Frame):
 
 def main():
     root = Tk()
-    root.title("爬虫4------Margular制作")
-    #root.iconbitmap("spider.ico")
-    root.resizable(False,False)
-    app1 = App(mw=root)
-    app1.mainloop()
+    root.title("GUI爬虫-----Margular")
+    # Linux不支持ico
+    try:
+        root.iconbitmap("images" + os.path.sep +"spider.ico")
+    except:
+        pass
+    root.resizable(True , True)
+    spider = Spider(root)
+    spider.mainloop()
                     
 if __name__ == '__main__':
     main()
